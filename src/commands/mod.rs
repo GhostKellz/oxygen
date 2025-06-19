@@ -1,6 +1,10 @@
 pub mod build;
 pub mod check;
+pub mod deps;
 pub mod doctor;
 pub mod env;
+pub mod gpg;
 pub mod info;
+pub mod init;
+pub mod toolchain;
 pub mod tools;
