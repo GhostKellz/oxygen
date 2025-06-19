@@ -2,6 +2,14 @@
 name = "oxygen"
 version = "0.2.0"
 edition = "2024"
+authors = ["Christopher Kelley <ckelley@ghostkellz.sh>"]
+license = "MIT OR Apache-2.0"
+description = "The essential Rust dev environment enhancer"
+repository = "https://github.com/ghostkellz/oxygen"
+homepage = "https://github.com/ghostkellz/oxygen"
+readme = "README.md"
+keywords = ["rust", "development", "cli", "toolchain", "productivity"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }

@@ -52,18 +52,41 @@ Whether you're hacking on side projects, managing a clean dotfile stack, or main
 
 ---
 
-## 🔧 Installation (Coming Soon)
+## 🔧 Installation
 
+### Quick Install (Linux/macOS)
 ```bash
-cargo install oxygen-cli
+curl -sSL https://raw.githubusercontent.com/ghostkellz/oxygen/main/install.sh | bash
 ```
 
-or clone and build:
-
+### Arch Linux
 ```bash
-git clone https://github.com/yourname/oxygen
+# Using the PKGBUILD from this repo
+git clone https://github.com/ghostkellz/oxygen.git
+cd oxygen
+./build-arch-package.sh stable
+sudo pacman -U oxygen-*.pkg.tar.*
+
+# Or build git version
+./build-arch-package.sh git
+```
+
+### From Source
+```bash
+# Prerequisites: Rust toolchain
+cargo install --git https://github.com/ghostkellz/oxygen
+
+# Or clone and build
+git clone https://github.com/ghostkellz/oxygen
 cd oxygen
 cargo build --release
+sudo cp target/release/oxygen /usr/local/bin/oxy
+```
+
+### Verify Installation
+```bash
+oxy --version
+oxy doctor  # Check your Rust environment
 ```
 
 ---
