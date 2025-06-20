@@ -165,6 +165,10 @@ build_from_source() {
     log_info "Looking for binary in target/release/..."
     ls -la target/release/ || true
     
+    # Check for any executable files
+    log_info "Checking for executable files:"
+    find target/release/ -type f -executable -ls || true
+    
     if [[ -f "target/release/oxygen" ]]; then
         binary_path="target/release/oxygen"
         log_info "Found binary at: $binary_path"
@@ -172,9 +176,17 @@ build_from_source() {
         binary_path="target/release/${BINARY_NAME}"
         log_info "Found binary at: $binary_path"
     else
-        log_error "Built binary not found. Available files in target/release/:"
-        ls -la target/release/ || true
-        exit 1
+        # Try to find any executable file that might be our binary
+        local found_binary
+        found_binary=$(find target/release/ -type f -executable ! -name "*.so" ! -name "build-*" ! -name "deps" | head -1)
+        if [[ -n "$found_binary" ]]; then
+            binary_path="$found_binary"
+            log_info "Found executable binary at: $binary_path"
+        else
+            log_error "No executable binary found. Available files in target/release/:"
+            ls -la target/release/ || true
+            exit 1
+        fi
     fi
     
     cp "$binary_path" "${INSTALL_DIR}/${BINARY_NAME}"

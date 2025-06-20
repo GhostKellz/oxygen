@@ -19,8 +19,8 @@ sha256sums=('SKIP') # Replace with actual checksum when available
 
 prepare() {
     cd "$pkgname-$pkgver"
-    # Update Cargo.lock if needed
-    cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+    # Generate/update Cargo.lock if needed
+    cargo fetch --target "$CARCH-unknown-linux-gnu"
 }
 
 build() {
@@ -30,8 +30,8 @@ build() {
     export RUSTUP_TOOLCHAIN=stable
     export CARGO_TARGET_DIR=target
     
-    # Build with release optimizations
-    cargo build --frozen --release --all-features
+    # Build with release optimizations (remove --frozen to allow lock file updates)
+    cargo build --release --all-features
 }
 
 check() {
@@ -39,7 +39,7 @@ check() {
     export RUSTUP_TOOLCHAIN=stable
     
     # Run tests
-    cargo test --frozen --all-features
+    cargo test --release --all-features
 }
 
 package() {
