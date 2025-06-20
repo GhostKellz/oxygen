@@ -11,19 +11,19 @@ mod utils;
 #[command(name = "oxy")]
 #[command(about = "The essential Rust dev environment enhancer")]
 #[command(version)]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    pub command: Commands,
 
     #[arg(long, help = "Output in JSON format")]
-    json: bool,
+    pub json: bool,
 
     #[arg(short, long, help = "Verbose output")]
-    verbose: bool,
+    pub verbose: bool,
 }
 
 #[derive(Subcommand)]
-enum Commands {
+pub enum Commands {
     /// Run clippy, fmt, and check in sequence
     Check,
     /// Build with enhanced timing and size summaries
@@ -145,4 +145,6 @@ async fn main() -> Result<()> {
         Commands::Deps { action } => commands::deps::run(action, cli.json).await,
         Commands::Gpg { action } => commands::gpg::run(action, cli.json).await,
     }
+
+    Ok(())
 }
