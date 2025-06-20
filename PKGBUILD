@@ -17,6 +17,12 @@ optdepends=('rustup: for toolchain management'
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
 sha256sums=('SKIP') # Replace with actual checksum when available
 
+prepare() {
+    cd "$pkgname-$pkgver"
+    # Update Cargo.lock if needed
+    cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
 build() {
     cd "$pkgname-$pkgver"
     
@@ -30,23 +36,27 @@ build() {
 
 check() {
     cd "$pkgname-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
     
     # Run tests
-    cargo test --frozen --release --all-features
+    cargo test --frozen --all-features
 }
 
 package() {
     cd "$pkgname-$pkgver"
+    install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
     
-    # Install the main binary
-    install -Dm755 "target/release/oxygen" "$pkgdir/usr/bin/oxy"
+    # Install license if available
+    if [[ -f LICENSE ]]; then
+        install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    elif [[ -f LICENSE-MIT ]]; then
+        install -Dm644 LICENSE-MIT "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+    fi
     
-    # Create symlink for full name
-    ln -s oxy "$pkgdir/usr/bin/oxygen"
-    
-    # Install documentation
-    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
-    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    # Install documentation if available
+    if [[ -f README.md ]]; then
+        install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+    fi
     
     # Install shell completions if they exist
     if [[ -f "completions/oxy.bash" ]]; then

@@ -162,17 +162,18 @@ build_from_source() {
     
     # Find the release binary
     local binary_path
-    if [[ -f "target/release/${BINARY_NAME}" ]]; then
-        binary_path="target/release/${BINARY_NAME}"
-    elif [[ -f "target/release/oxygen" ]]; then
+    log_info "Looking for binary in target/release/..."
+    ls -la target/release/ || true
+    
+    if [[ -f "target/release/oxygen" ]]; then
         binary_path="target/release/oxygen"
-        # Create symlink with shorter name
-        cp "$binary_path" "${INSTALL_DIR}/${BINARY_NAME}"
-        chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
-        log_success "Oxygen built and installed successfully to ${INSTALL_DIR}/${BINARY_NAME}"
-        return 0
+        log_info "Found binary at: $binary_path"
+    elif [[ -f "target/release/${BINARY_NAME}" ]]; then
+        binary_path="target/release/${BINARY_NAME}"
+        log_info "Found binary at: $binary_path"
     else
-        log_error "Built binary not found"
+        log_error "Built binary not found. Available files in target/release/:"
+        ls -la target/release/ || true
         exit 1
     fi
     
