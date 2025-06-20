@@ -155,7 +155,30 @@ build_from_source() {
     cd "$TEMP_DIR/oxygen"
     
     log_info "Building release binary..."
-    cargo build --release
+    
+    # Check what binaries cargo thinks should be built
+    log_info "Checking project metadata..."
+    if command_exists cargo; then
+        cargo metadata --no-deps --format-version 1 2>/dev/null | grep -o '"name":"[^"]*"' | grep -v "oxygen$" || true
+    fi
+    
+    if ! cargo build --release; then
+        log_error "Build failed"
+        exit 1
+    fi
+    
+    log_info "Build completed. Checking what was built..."
+    
+    # Check if any binaries were actually built
+    log_info "Contents of target/release/:"
+    ls -la target/release/ 2>/dev/null || true
+    
+    # Look for any files that might be our binary (exclude known non-binaries)
+    log_info "Looking for potential binaries (excluding build artifacts)..."
+    find target/release/ -maxdepth 1 -type f -executable ! -name "*.so" ! -name "*.d" ! -name ".*" 2>/dev/null | while read -r file; do
+        echo "  Found: $file"
+        file "$file" 2>/dev/null || true
+    done
     
     # Install the binary
     mkdir -p "$INSTALL_DIR"
@@ -165,10 +188,7 @@ build_from_source() {
     log_info "Looking for binary in target/release/..."
     ls -la target/release/ || true
     
-    # Check for any executable files
-    log_info "Checking for executable files:"
-    find target/release/ -type f -executable -ls || true
-    
+    # Look for the main binary (not build scripts or deps)
     if [[ -f "target/release/oxygen" ]]; then
         binary_path="target/release/oxygen"
         log_info "Found binary at: $binary_path"
@@ -176,14 +196,19 @@ build_from_source() {
         binary_path="target/release/${BINARY_NAME}"
         log_info "Found binary at: $binary_path"
     else
-        # Try to find any executable file that might be our binary
+        # Try to find the main executable (exclude build scripts and deps)
+        log_info "Searching for main executable..."
         local found_binary
-        found_binary=$(find target/release/ -type f -executable ! -name "*.so" ! -name "build-*" ! -name "deps" | head -1)
+        found_binary=$(find target/release/ -maxdepth 1 -type f -executable ! -name "build-*" ! -name "*.so" ! -name "deps" 2>/dev/null | head -1)
         if [[ -n "$found_binary" ]]; then
             binary_path="$found_binary"
             log_info "Found executable binary at: $binary_path"
         else
-            log_error "No executable binary found. Available files in target/release/:"
+            log_error "No main executable binary found. The build may have failed."
+            log_info "Expected binary locations:"
+            log_info "  - target/release/oxygen"
+            log_info "  - target/release/${BINARY_NAME}"
+            log_info "Available files in target/release/:"
             ls -la target/release/ || true
             exit 1
         fi
