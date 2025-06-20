@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: [self-hosted, nv-palladium]
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,9 +19,50 @@ jobs:
         with:
           toolchain: stable
           override: true
+          components: rustfmt, clippy
 
-      - name: Build
-        run: cargo build --verbose
+      - name: Check Rust version
+        run: |
+          rustc --version
+          cargo --version
+
+      - name: Check project structure
+        run: |
+          echo "=== Project structure ==="
+          find src -name "*.rs" -type f || echo "No src directory found"
+          echo "=== Cargo.toml content ==="
+          cat Cargo.toml || echo "No Cargo.toml found"
+
+      - name: Build (debug)
+        run: |
+          echo "=== Building debug ==="
+          cargo build --verbose
+          echo "=== Debug build contents ==="
+          ls -la target/debug/ || true
+
+      - name: Build (release)
+        run: |
+          echo "=== Building release ==="
+          cargo build --release --verbose
+          echo "=== Release build contents ==="
+          ls -la target/release/ || true
+          echo "=== Looking for binaries ==="
+          find target/release/ -maxdepth 1 -type f -executable || true
 
       - name: Test
         run: cargo test --verbose
+
+      - name: Verify binary exists
+        run: |
+          if [[ -f "target/release/oxygen" ]]; then
+            echo "✓ Found oxygen binary"
+            ./target/release/oxygen --version || echo "Binary exists but failed to run"
+          elif [[ -f "target/release/oxy" ]]; then
+            echo "✓ Found oxy binary"
+            ./target/release/oxy --version || echo "Binary exists but failed to run"
+          else
+            echo "✗ No binary found in target/release/"
+            echo "Available files:"
+            ls -la target/release/ || true
+            exit 1
+          fi
