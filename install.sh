@@ -196,20 +196,37 @@ build_from_source() {
         binary_path="target/release/${BINARY_NAME}"
         log_info "Found binary at: $binary_path"
     else
-        # Try to find the main executable (exclude build scripts and deps)
-        log_info "Searching for main executable..."
-        local found_binary
-        found_binary=$(find target/release/ -maxdepth 1 -type f -executable ! -name "build-*" ! -name "*.so" ! -name "deps" 2>/dev/null | head -1)
+        # Check what binaries Cargo actually built
+        log_info "Checking what Cargo built with 'cargo install --list'..."
+        cargo install --list | grep -i oxygen || true
+        
+        # Look for main executable in target/release (not in subdirs)
+        log_info "Looking for executables directly in target/release/..."
+        local found_binary=""
+        for file in target/release/*; do
+            if [[ -f "$file" && -x "$file" && ! "$file" =~ \.(so|d)$ && ! "$file" =~ /\. ]]; then
+                # Check if it's actually an executable binary (not a script)
+                if file "$file" 2>/dev/null | grep -q "executable"; then
+                    found_binary="$file"
+                    log_info "Found potential binary: $file"
+                    break
+                fi
+            fi
+        done
+        
         if [[ -n "$found_binary" ]]; then
             binary_path="$found_binary"
-            log_info "Found executable binary at: $binary_path"
+            log_info "Using binary: $binary_path"
         else
-            log_error "No main executable binary found. The build may have failed."
-            log_info "Expected binary locations:"
-            log_info "  - target/release/oxygen"
-            log_info "  - target/release/${BINARY_NAME}"
-            log_info "Available files in target/release/:"
-            ls -la target/release/ || true
+            log_error "No main executable binary found."
+            log_error "This suggests the project may not have a binary target configured."
+            log_info "Try adding this to your Cargo.toml:"
+            echo
+            echo "[[bin]]"
+            echo "name = \"oxygen\""
+            echo "path = \"src/main.rs\""
+            echo
+            log_info "Or check if src/main.rs exists and has a main() function."
             exit 1
         fi
     fi
