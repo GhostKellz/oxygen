@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use tracing::{Level, info};
 use tracing_subscriber::fmt;
+use oxygen::{ToolchainAction, DepsAction, GpgAction};
 
 mod commands;
 mod config;
@@ -64,58 +65,6 @@ pub enum Commands {
     },
 }
 
-#[derive(Subcommand)]
-pub enum ToolchainAction {
-    /// List installed toolchains
-    List,
-    /// Install a toolchain
-    Install {
-        /// Toolchain to install (stable, beta, nightly, or specific version)
-        toolchain: String,
-    },
-    /// Set default toolchain
-    Default {
-        /// Toolchain to set as default
-        toolchain: String,
-    },
-    /// Show active toolchain
-    Show,
-    /// Remove a toolchain
-    Remove {
-        /// Toolchain to remove
-        toolchain: String,
-    },
-}
-
-#[derive(Subcommand)]
-pub enum DepsAction {
-    /// Show dependency tree with vulnerabilities
-    Tree,
-    /// Check for outdated dependencies
-    Outdated,
-    /// Audit dependencies for security issues
-    Audit,
-    /// Show dependency licenses
-    Licenses,
-    /// Analyze dependency sizes
-    Size,
-}
-
-#[derive(Subcommand)]
-pub enum GpgAction {
-    /// Sign a release or commit
-    Sign {
-        /// What to sign (commit, tag, or file)
-        target: String,
-    },
-    /// Verify GPG signature
-    Verify {
-        /// What to verify
-        target: String,
-    },
-    /// Setup GPG for Rust development
-    Setup,
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -132,18 +81,18 @@ async fn main() -> Result<()> {
     info!("Starting Oxygen CLI");
 
     match cli.command {
-        Commands::Check => commands::check::run(cli.json).await,
-        Commands::Build => commands::build::run(cli.json).await,
-        Commands::Doctor => commands::doctor::run(cli.json).await,
-        Commands::Env => commands::env::run(cli.json).await,
-        Commands::Info => commands::info::run(cli.json).await,
-        Commands::Tools => commands::tools::run(cli.json).await,
-        Commands::Toolchain { action } => commands::toolchain::run(action, cli.json).await,
+        Commands::Check => commands::check::run(cli.json).await?,
+        Commands::Build => commands::build::run(cli.json).await?,
+        Commands::Doctor => commands::doctor::run(cli.json).await?,
+        Commands::Env => commands::env::run(cli.json).await?,
+        Commands::Info => commands::info::run(cli.json).await?,
+        Commands::Tools => commands::tools::run(cli.json).await?,
+        Commands::Toolchain { action } => commands::toolchain::run(action, cli.json).await?,
         Commands::Init { name, template, list_templates } => {
-            commands::init::run(name, template, list_templates, cli.json).await
+            commands::init::run(name, template, list_templates, cli.json).await?
         },
-        Commands::Deps { action } => commands::deps::run(action, cli.json).await,
-        Commands::Gpg { action } => commands::gpg::run(action, cli.json).await,
+        Commands::Deps { action } => commands::deps::run(action, cli.json).await?,
+        Commands::Gpg { action } => commands::gpg::run(action, cli.json).await?,
     }
 
     Ok(())

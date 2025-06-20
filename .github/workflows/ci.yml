@@ -46,23 +46,38 @@ jobs:
           cargo build --release --verbose
           echo "=== Release build contents ==="
           ls -la target/release/ || true
+          echo "=== Target-specific release contents ==="
+          ls -la target/x86_64-unknown-linux-gnu/release/ || true
           echo "=== Looking for binaries ==="
-          find target/release/ -maxdepth 1 -type f -executable || true
+          find target/ -name "oxygen" -type f -executable || true
 
       - name: Test
         run: cargo test --verbose
 
       - name: Verify binary exists
         run: |
+          # Check multiple possible locations
+          BINARY_FOUND=false
+          
+          # Check standard location first
           if [[ -f "target/release/oxygen" ]]; then
-            echo "✓ Found oxygen binary"
+            echo "✓ Found oxygen binary at target/release/oxygen"
             ./target/release/oxygen --version || echo "Binary exists but failed to run"
-          elif [[ -f "target/release/oxy" ]]; then
-            echo "✓ Found oxy binary"
-            ./target/release/oxy --version || echo "Binary exists but failed to run"
+            BINARY_FOUND=true
+          elif [[ -f "target/x86_64-unknown-linux-gnu/release/oxygen" ]]; then
+            echo "✓ Found oxygen binary at target/x86_64-unknown-linux-gnu/release/oxygen"
+            ./target/x86_64-unknown-linux-gnu/release/oxygen --version || echo "Binary exists but failed to run"
+            BINARY_FOUND=true
           else
-            echo "✗ No binary found in target/release/"
-            echo "Available files:"
-            ls -la target/release/ || true
+            echo "✗ No oxygen binary found"
+            echo "Checking all possible locations..."
+            find target/ -name "oxygen" -type f -executable 2>/dev/null || true
+            echo "Available files in target/release/:"
+            ls -la target/release/ 2>/dev/null || true
+            echo "Available files in target/x86_64-unknown-linux-gnu/release/:"
+            ls -la target/x86_64-unknown-linux-gnu/release/ 2>/dev/null || true
+          fi
+          
+          if [[ "$BINARY_FOUND" == "false" ]]; then
             exit 1
           fi

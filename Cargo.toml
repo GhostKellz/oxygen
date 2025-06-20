@@ -23,10 +23,10 @@ tokio = { version = "1.0", features = ["process", "rt", "rt-multi-thread", "macr
 anyhow = "1.0"
 toml = "0.8"
 
-[[bin]]
+[lib]
 name = "oxygen"
-path = "src/main.rs"
+path = "src/lib.rs"
 
 [[bin]]
-name = "oxy"
+name = "oxygen"
 path = "src/main.rs"
